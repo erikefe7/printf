@@ -1,53 +1,66 @@
+#include <stdarg.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "main.h"
 
 /**
- * _printf - formatted output conversion and print data.
- * @format: input string.
- *
- * Return: number of chars printed.
+ * _printf - prints a string in a formatted way
+ * @format: string to print (char *)
+ * @...: variadic parameters (unknown)
+ * 
+ * Return: number of characters printed
  */
+
 int _printf(const char *format, ...)
 {
-	unsigned int i = 0, len = 0. ibuf = 0;
-	va_list argument;
-	int (*function)(va_list, char *, unsigned int);
-	char *buffer;
+	int i = 0;
+	int count = 0;
+	int value = 0;
+	va_list args;
+	va_start(args, format);
+	int (*f)(va_list);
 
-	va_start(arguments, format). buffer = malloc(sizeof(char) * 1024);
-	if (!format || !buffer || (format[i] == '%' && !format[i + 1]))
+	/*prevent passing a NULL pointer*/
+	if (format == NULL)
 		return (-1);
-	if (!format[i])
-		return (0);
-	for (i = 0; format && format[i]; i++)
+
+	/*print each character of string*/
+	while (format[i])
 	{
+		if (format[i] != '%')
+		{
+			value = write(1,&format[i],1);
+			count = count + value;
+			i++;
+			continue;
+		}
+
 		if (format[i] == '%')
 		{
+			f = check_specify(&format[i + 1]);
+			if (f != NULL)
+			{
+				value = f(args);
+				count = count + value;
+				i = i + 2;
+				continue;
+			}
+
 			if (format[i + 1] == '\0')
 			{
-				print_buf(buffer, ibuf), free(buffer), va_end(arguments);
-				return (-1);
+				break;
 			}
-			else
+
+			if (format[i + 1] != '\0')
 			{
-				function = get_print_func(format, i + 1);
-				if (function == NULL)
-				{
-					if (format[i + 1] == ' ' && !format[i + 2])
-						return (-1);
-					handl_buf(buffer, format[i], ibuf), len++, i--;
-				}
-				else
-				{
-					len += function(arguments, buffer, ibuf);
-					i += ev_print_func(format, i + 1);
-				}
-			} i++;
+				value = write(1, &format[i + 1], 1);
+
+				count = count + value;
+				i = i + 2;
+				continue;
+			}
 		}
-		else
-			handl_buf(buffer, format[i], ibuf), len++;
-		for (ibuf = len; ibuf > 1024; ibuf -= 1024)
-			;
 	}
-	print_buf(buffer, ibuf), free(buffer), va_end(arguments);
-	return (len);
+
+	return (count);
 }
